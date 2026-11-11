@@ -1,0 +1,85 @@
+# Entorno y secretos
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.jks
+id_rsa*
+id_ed25519*
+.netrc
+.pgpass
+
+# Go
+/apps/api/api
+/apps/api/migrate
+/apps/api/servicio
+/apps/api/bin/
+/bin/
+*.test
+*.out
+*.prof
+coverage.html
+coverage/
+
+# Node / pnpm
+node_modules/
+.pnpm-store/
+.pnpm-debug.log*
+npm-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+dist/
+build/
+out/
+coverage/
+.vite/
+.turbo/
+*.tsbuildinfo
+.eslintcache
+.oxlintcache
+
+# Pruebas e2e
+*.actual
+*.actual.md
+test-results/
+playwright-report/
+
+# Sonar, escáneres y cachés
+.scannerwork/
+.sonar/
+.trivy/
+*.sarif
+
+# Herramientas y editores
+.idea/
+.vscode/
+.zed/
+*.swp
+*.swo
+*~
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs y temporales
+*.log
+tmp/
+temp/
+.cache/
+pgdata/
+.pgdata/
+postgres-data/
+
+# El DAS vive en docs/ y se versiona con el resto de la documentación.
+
+# No ignorar: se generan y se commitean a propósito.
+# contracts/openapi.yaml
+# apps/api/go.sum
+# apps/api/internal/repository/
+# apps/api/db/migrations/
+# apps/api/e2e/testdata/*.golden.md
