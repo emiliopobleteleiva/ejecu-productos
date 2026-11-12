@@ -1,0 +1,8 @@
+# Todo excluido por defecto; solo entra lo que la imagen necesita
+*
+!apps/api/
+
+# Aunque esté dentro de apps/api, nunca entra
+**/.env*
+**/.git
+**/node_modules
