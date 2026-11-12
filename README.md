@@ -38,7 +38,7 @@ Las instrucciones completas para CachyOS/Arch y Ubuntu/Debian están en
 
 Resumen:
 
-- Go 1.26.0 + toolchain go1.26.5.
+- Go 1.26.0 + toolchain go1.26.11.
 - Node 22.22.0 y pnpm 10.13.1, solo para el flujo del DAS.
 - Docker y Docker Compose para el Hito 2.
 - `go install` deja los binarios en `$HOME/go/bin`; ese directorio debe estar
@@ -110,6 +110,6 @@ regenera desde los structs.
 
 ## Versiones fijadas
 
-- Go: `1.26.0` + `toolchain go1.26.5`.
+- Go: `1.26.0` + `toolchain go1.26.11`.
 - Huma: `v2.34.1`.
 - No se agregan dependencias fuera de la tabla del DAS.

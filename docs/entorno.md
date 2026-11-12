@@ -8,7 +8,7 @@ para el resto del grupo.
 
 | Herramienta | Versión |
 |---|---|
-| Go | `1.26.0` + `toolchain go1.26.5` |
+| Go | `1.26.0` + `toolchain go1.26.11` |
 | Huma | `v2.34.1` |
 | Node.js | `22.22.0` |
 | pnpm | `10.13.1` |
@@ -58,11 +58,11 @@ sudo apt install -y git curl jq build-essential golang-go nodejs npm docker.io d
 Notas:
 
 - `golang-go` de Ubuntu puede ser anterior a 1.26. El `go.mod` pide
-  `toolchain go1.26.5`, así que Go intentará descargarla automáticamente. Si
+  `toolchain go1.26.11`, así que Go intentará descargarla automáticamente. Si
   falla, instala la toolchain exacta:
   ```bash
-  go install golang.org/dl/go1.26.5@latest
-  "$HOME/go/bin/go1.26.5" download
+  go install golang.org/dl/go1.26.11@latest
+  "$HOME/go/bin/go1.26.11" download
   ```
   O baja el tarball desde `https://go.dev/dl/`.
 - `nodejs` de Ubuntu puede ser anterior a 22.22.0. Para la versión exacta usa
