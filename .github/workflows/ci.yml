@@ -14,18 +14,26 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - uses: pnpm/action-setup@d9184bf108216479bc5a137cc391f4d7b14c870b # v6.1.0
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: apps/api/go.mod
           cache-dependency-path: apps/api/go.sum
 
-      - name: version de go
-        run: go version
+      - name: instalar dependencias (lockfile congelado)
+        run: pnpm install --frozen-lockfile
 
-      - name: compilar api
+      - name: verificar modulos go
         working-directory: apps/api
-        run: go build ./...
+        run: go mod verify
 
-      - name: go vet
-        working-directory: apps/api
-        run: go vet ./...
+      - name: verify
+        run: pnpm verify
+
+      - name: contrato al dia
+        run: pnpm codegen && git diff --exit-code
