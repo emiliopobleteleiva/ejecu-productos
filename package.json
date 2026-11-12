@@ -8,6 +8,6 @@
   "scripts": {
     "codegen": "cd apps/api && go run ./cmd/codegen",
     "verify": "cd apps/api && go vet ./... && go build ./...",
-    "test:api": "cd apps/api && go test -coverpkg=./internal/... -coverprofile=coverage.out ./internal/..."
+    "test:api": "cd apps/api && go test -coverpkg=./internal/... -coverprofile=../../coverage.out ./internal/..."
   }
 }
