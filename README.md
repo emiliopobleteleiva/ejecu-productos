@@ -15,6 +15,22 @@ goose y la lógica real quedan para el Hito 2.
 - Sin autenticación todavía; los permisos quedan anotados como `TODO`.
 - Sin migraciones, sqlc ni conexión a PostgreSQL.
 
+## Pipeline de CI
+
+El workflow [`.github/workflows/ci.yml`](.github/workflows/ci.yml) corre en cada
+PR y en cada push a `main`. Los tres jobs son checks requeridos en `main`.
+
+| Job | Controles |
+|---|---|
+| `calidad` | `go mod verify`, vet y build, contrato al día, cobertura y SonarCloud con Quality Gate |
+| `seguridad` | gitleaks, govulncheck, pnpm audit, hadolint y Trivy fs |
+| `imagen` | build de la imagen, Trivy image y Dockle |
+
+- Ejecuciones del pipeline:
+  [GitHub Actions](https://github.com/emiliopobleteleiva/ejecu-productos/actions/workflows/ci.yml)
+- Análisis de código:
+  [SonarCloud](https://sonarcloud.io/dashboard?id=emiliopobleteleiva_ejecu-productos)
+
 ## Estructura
 
 ```text
