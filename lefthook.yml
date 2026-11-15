@@ -1,0 +1,33 @@
+# Hooks locales. Se instalan después de `pnpm install`, con uno de estos:
+#   pnpm exec lefthook install
+#   lefthook install            # si el binario viene de `go install`
+# `.npmrc` tiene ignore-scripts=true, así que pnpm no los instala solo.
+
+pre-commit:
+  parallel: true
+  commands:
+    go-fmt:
+      glob: "*.go"
+      run: cd apps/api && test -z "$(gofmt -l .)" && go vet ./...
+    secretos:
+      run: gitleaks protect --staged --redact --no-banner
+    # Los hooks de frontend quedan inertes mientras no exista apps/web: los
+    # globs no coinciden con nada. Al crear apps/web hay que agregar prettier
+    # y oxlint como devDependencies en la raíz (versiones del DAS, sección 3).
+    format:
+      glob: "apps/web/**/*.{js,ts,jsx,tsx,json,css}"
+      run: pnpm exec prettier --write --ignore-unknown {staged_files}
+      stage_fixed: true
+    lint:
+      glob: "apps/web/**/*.{ts,tsx}"
+      run: pnpm exec oxlint --deny-warnings
+
+pre-push:
+  parallel: true
+  commands:
+    verify:
+      run: pnpm verify
+    test-api:
+      run: pnpm test:api
+    contrato:
+      run: pnpm codegen && git diff --exit-code -- contracts/openapi.yaml
