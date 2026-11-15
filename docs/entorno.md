@@ -173,6 +173,7 @@ El tag correcto lleva `v`. `goodwithtech/dockle:0.4.15` no existe.
 ## Docker Compose
 
 ```bash
+cp .env.example .env        # completar POSTGRES_PASSWORD antes de levantar
 docker compose up -d --build
 docker compose ps
 docker compose logs -f backend
@@ -190,8 +191,9 @@ docker compose down -v     # borra también los datos
   `POSTGRES_PUBLISHED_PORT`.
 - `migrate`, `seed`, `frontend` y `mailpit` se agregan en el Hito 2 y en el
   ensamblaje LPS.
-- `.env` es opcional: el compose trae valores por defecto. Si lo creas, parte de
-  `.env.example` y no lo commitees.
+- `.env` es obligatorio: `POSTGRES_PASSWORD` no tiene valor por defecto, para no
+dejar una credencial en el repositorio. Copia `.env.example` a `.env` y completa
+los `replace-with-*`. `.env` no se commitea.
 - La imagen de PostgreSQL está fijada por digest; no la cambies por `latest`.
 
 ## Hooks locales (lefthook + gitleaks)

@@ -11,7 +11,9 @@ services:
     image: postgres:17.11-alpine@sha256:e5d2edd28b1f8d40a0a6c0c9cdc545b19b56a0d5d88f94bc11a97d970d4700d0
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-productos}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-productos}
+      # Obligatoria, sin valor por defecto: una credencial por defecto en el repo
+      # es una credencial filtrada. Se define en .env, que no se versiona.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?define POSTGRES_PASSWORD en .env}
       POSTGRES_DB: ${POSTGRES_DB:-productos}
       TZ: ${TZ:-America/Santiago}
     ports:
@@ -37,10 +39,10 @@ services:
     environment:
       API_PORT: "8080"
       API_ENV: ${API_ENV:-dev}
-      DATABASE_URL: postgres://${POSTGRES_USER:-productos}:${POSTGRES_PASSWORD:-productos}@postgres:5432/${POSTGRES_DB:-productos}?sslmode=disable
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5130}
       TZ: ${TZ:-America/Santiago}
-      # TODO Hito 2 (auth): AUTH_JWKS_URL=${AUTH_JWKS_URL}
+      # TODO Hito 2: DATABASE_URL y AUTH_JWKS_URL cuando existan el store y la
+      # autenticación. Hoy la API no se conecta a PostgreSQL.
     depends_on:
       postgres:
         condition: service_healthy

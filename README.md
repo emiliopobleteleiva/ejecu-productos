@@ -111,6 +111,7 @@ curl -s http://localhost:8080/api/docs -o /dev/null -w '%{http_code}\n'
 ## Cómo levantar todo con Docker Compose
 
 ```bash
+cp .env.example .env        # completar POSTGRES_PASSWORD
 docker compose up -d --build
 docker compose ps
 ```
