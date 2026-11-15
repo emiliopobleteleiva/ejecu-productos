@@ -30,6 +30,10 @@ sudo pacman -S --needed nodejs npm docker docker-compose docker-buildx
 sudo pacman -S --needed gitleaks trivy
 ```
 
+> `pacman` es atómico: si en una misma invocación incluyes un paquete que no
+existe (por ejemplo `hadolint`), aborta **toda** la transacción y no instala
+nada de lo demás. Instala en comandos separados y verifica los nombres antes.
+
 `hadolint` y `lefthook` no están en los repos oficiales:
 
 ```bash
@@ -144,6 +148,11 @@ Alternativa:
 corepack install -g pnpm@10.13.1
 ```
 
+Si `pnpm` avisa `Unsupported engine: wanted 22.22.0 (current v26.12.1)`, es solo
+un aviso: los scripts corren igual y el CI usa `.nvmrc` (22.22.0), así que no
+afecta al pipeline. Para alinearlo en local, `fnm use` o `nvm use` dentro del
+repo.
+
 ## Docker
 
 ```bash
@@ -161,6 +170,69 @@ docker run --rm goodwithtech/dockle:v0.4.15 --version
 
 El tag correcto lleva `v`. `goodwithtech/dockle:0.4.15` no existe.
 
+## Docker Compose
+
+```bash
+docker compose up -d --build
+docker compose ps
+docker compose logs -f backend
+docker compose down        # conserva el volumen de PostgreSQL
+docker compose down -v     # borra también los datos
+```
+
+| Servicio | Puerto en el host | Notas |
+|---|---|---|
+| `backend` | `127.0.0.1:5131` → `8080` | `API_ENV=dev`, sirve `/api/docs` |
+| `postgres` | `127.0.0.1:5433` → `5432` | volumen `postgres-datos` |
+
+- Los puertos siguen la convención del DAS (`51N1` para la API, con N=3) y se
+  publican solo en loopback. Se pueden cambiar con `API_PUBLISHED_PORT` y
+  `POSTGRES_PUBLISHED_PORT`.
+- `migrate`, `seed`, `frontend` y `mailpit` se agregan en el Hito 2 y en el
+  ensamblaje LPS.
+- `.env` es opcional: el compose trae valores por defecto. Si lo creas, parte de
+  `.env.example` y no lo commitees.
+- La imagen de PostgreSQL está fijada por digest; no la cambies por `latest`.
+
+## Hooks locales (lefthook + gitleaks)
+
+`.npmrc` tiene `ignore-scripts=true`, así que los hooks no se instalan solos:
+
+```bash
+pnpm install
+lefthook install
+ls -l .git/hooks/pre-commit .git/hooks/pre-push
+```
+
+Sin `lefthook install` no hay hooks. El `pre-commit` corre gofmt, `go vet`,
+Prettier/oxlint (cuando exista `apps/web`) y Gitleaks; el `pre-push` corre
+`pnpm verify`, `pnpm test:api` y verifica que el contrato esté al día.
+
+Prueba que Gitleaks bloquea un secreto (el commit debe abortar):
+
+```bash
+TOKEN_FALSO="glpat-$(openssl rand -hex 10)"
+printf 'token = %s\n' "$TOKEN_FALSO" > secreto-falso.txt
+git add secreto-falso.txt
+git commit -m "chore: prueba de hook"     # falla con leaks found: 1
+git restore --staged secreto-falso.txt
+rm -f secreto-falso.txt
+```
+
+El señuelo se genera al vuelo a propósito. Un `glpat-` literal pegado en la
+documentación dispara Gitleaks **y** la protección de push de GitHub, que escanea
+el contenido del commit y no respeta las anotaciones `gitleaks:allow`.
+
+Para ver el detalle de un hallazgo, corre el mismo comando a mano:
+
+```bash
+gitleaks protect --staged --no-banner -v
+```
+
+No sirven como prueba las claves de ejemplo de la documentación de AWS: están en
+la allowlist por defecto, y una cadena `AKIA` + 16 caracteres tampoco dispara
+`aws-access-token` en 8.30.1. Con `glpat-` o `sk_live_` sí se ve el hallazgo.
+
 ## Verificación rápida
 
 Desde `apps/api`:
@@ -177,6 +249,9 @@ go run ./cmd/api
 El contrato queda en `contracts/openapi.yaml` y la API en
 `http://localhost:8080`. La documentación interactiva está en
 `http://localhost:8080/api/docs`.
+
+Con Compose no hace falta `go run`: `docker compose up -d --build` deja la API en
+`http://localhost:5131` y PostgreSQL en `localhost:5433`.
 
 ## Qué se versiona y qué no
 
@@ -200,6 +275,5 @@ El contrato queda en `contracts/openapi.yaml` y la API en
 - `.scannerwork/`, `.trivy/` y reportes locales de escáneres.
 - Datos locales de PostgreSQL (`pgdata/`, `.pgdata/`, archivos `.db`).
 
-`enunciado/` no está ignorado por defecto. Si no quieres versionar el material
-del curso, descomenta `/enunciado/` en `.gitignore`. Si quieres conservar el DAS
-en el repo, déjalo como está y commitéalo.
+El material del curso vive en `docs/DAS — Desarrollo de Microservicios.md` y se
+versiona con el resto de la documentación.

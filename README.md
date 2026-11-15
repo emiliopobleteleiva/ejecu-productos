@@ -12,6 +12,8 @@ goose y la lógica real quedan para el Hito 2.
 - SKU único, categorización múltiple con `categoria_ids []string`, costo
   `int64` en pesos y flag `permite_venta`.
 - Contrato OpenAPI generado desde los structs de Huma.
+- Levanta con `docker compose up -d --build` (API + PostgreSQL).
+- Hooks locales de formato, `go vet` y Gitleaks con `lefthook install`.
 - Sin autenticación todavía; los permisos quedan anotados como `TODO`.
 - Sin migraciones, sqlc ni conexión a PostgreSQL.
 
@@ -42,6 +44,8 @@ apps/api/
 ├── internal/store/           # TODO Hito 2: PostgreSQL
 └── go.mod
 contracts/openapi.yaml        # generado, no editar a mano
+docker-compose.yaml           # postgres + backend para desarrollo
+lefthook.yml                  # hooks de pre-commit y pre-push
 docs/modos-de-falla.md
 docs/decisiones.md
 docs/entorno.md
@@ -103,6 +107,35 @@ Probar:
 curl -s http://localhost:8080/api/productos | jq
 curl -s http://localhost:8080/api/docs -o /dev/null -w '%{http_code}\n'
 ```
+
+## Cómo levantar todo con Docker Compose
+
+```bash
+docker compose up -d --build
+docker compose ps
+```
+
+| Servicio | URL |
+|---|---|
+| API | `http://localhost:5131/api/productos` |
+| Documentación interactiva | `http://localhost:5131/api/docs` |
+| PostgreSQL | `localhost:5433` |
+
+`docker compose down` para bajar conservando los datos; `docker compose down -v`
+borra también el volumen de PostgreSQL. Los puertos siguen la convención `51N1`
+del DAS y se publican solo en `127.0.0.1`.
+
+## Hooks locales
+
+```bash
+pnpm install
+lefthook install
+```
+
+`.npmrc` tiene `ignore-scripts=true`, así que los hooks no se instalan solos. Sin
+`lefthook install` no hay validación local: el `pre-commit` corre gofmt, `go vet`
+y Gitleaks, y el `pre-push` corre los tests y verifica que el contrato esté al
+día. Detalle y prueba de Gitleaks en [`docs/entorno.md`](docs/entorno.md).
 
 ## Cómo generar el contrato
 
