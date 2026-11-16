@@ -9,5 +9,8 @@
     "codegen": "cd apps/api && go run ./cmd/codegen",
     "verify": "cd apps/api && go vet ./... && go build ./...",
     "test:api": "cd apps/api && go test -coverpkg=./internal/... -coverprofile=../../coverage.out ./internal/..."
+  },
+  "devDependencies": {
+    "lefthook": "2.1.10"
   }
 }
