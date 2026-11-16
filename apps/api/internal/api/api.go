@@ -11,7 +11,9 @@ import (
 func NuevaAPI(mux *http.ServeMux, version, entorno string) huma.API {
 	config := huma.DefaultConfig("Servicio de Productos", version)
 	config.Info.Description = "CRUD de productos con SKU único, categorización múltiple, costo entero en pesos y flag de venta."
-	config.OpenAPIPath = "/api/openapi.json"
+	// Huma agrega la extensión: publica <ruta>.json y <ruta>.yaml. Sin extensión
+	// en la configuración, el spec queda en /api/openapi.json y /api/openapi.yaml.
+	config.OpenAPIPath = "/api/openapi"
 	config.DocsPath = "/api/docs"
 
 	if entorno == "prod" {
