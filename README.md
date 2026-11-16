@@ -33,6 +33,22 @@ PR y en cada push a `main`. Los tres jobs son checks requeridos en `main`.
 - Análisis de código:
   [SonarCloud](https://sonarcloud.io/dashboard?id=emiliopobleteleiva_ejecu-productos)
 
+## Ramas y commits
+
+`main` está protegida: todo entra por PR, con una aprobación y los checks
+`calidad`, `seguridad` e `imagen` en verde.
+
+| Prefijo | Uso |
+|---|---|
+| `feat/<tema>` | funcionalidad nueva |
+| `fix/<tema>` | corrección de un defecto |
+| `chore/<tema>` | tooling, pipeline, dependencias y configuración |
+| `docs/<tema>` | solo documentación |
+
+Los commits siguen Conventional Commits (`feat:`, `fix:`, `chore:`, `docs:`, `ci:`).
+`chore/` y `docs/` se agregan a los prefijos del DAS (§9) para el trabajo que no
+cambia el comportamiento del servicio.
+
 ## Estructura
 
 ```text
@@ -48,6 +64,7 @@ docker-compose.yaml           # postgres + backend para desarrollo
 lefthook.yml                  # hooks de pre-commit y pre-push
 docs/modos-de-falla.md
 docs/decisiones.md
+docs/arquitectura.md
 docs/entorno.md
 ```
 
@@ -130,13 +147,16 @@ del DAS y se publican solo en `127.0.0.1`.
 
 ```bash
 pnpm install
-lefthook install
+pnpm exec lefthook install
 ```
 
+`lefthook` es una `devDependency` (2.1.10): `pnpm exec` lo resuelve desde
+`node_modules`, así que no hace falta instalarlo aparte ni tenerlo en el PATH.
 `.npmrc` tiene `ignore-scripts=true`, así que los hooks no se instalan solos. Sin
-`lefthook install` no hay validación local: el `pre-commit` corre gofmt, `go vet`
-y Gitleaks, y el `pre-push` corre los tests y verifica que el contrato esté al
-día. Detalle y prueba de Gitleaks en [`docs/entorno.md`](docs/entorno.md).
+`pnpm exec lefthook install` no hay validación local: el `pre-commit` corre
+gofmt, `go vet` y Gitleaks, y el `pre-push` corre los tests y verifica que el
+contrato esté al día. Detalle y prueba de Gitleaks en
+[`docs/entorno.md`](docs/entorno.md).
 
 ## Cómo generar el contrato
 

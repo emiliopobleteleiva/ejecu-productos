@@ -34,15 +34,16 @@ sudo pacman -S --needed gitleaks trivy
 existe (por ejemplo `hadolint`), aborta **toda** la transacción y no instala
 nada de lo demás. Instala en comandos separados y verifica los nombres antes.
 
-`hadolint` y `lefthook` no están en los repos oficiales:
+`hadolint` no está en los repos oficiales:
 
 ```bash
 mkdir -p "$HOME/.local/bin"
 curl -fsSL -o "$HOME/.local/bin/hadolint" https://github.com/hadolint/hadolint/releases/download/v2.15.1/hadolint-linux-x86_64
 chmod +x "$HOME/.local/bin/hadolint"
-
-go install github.com/evilmartians/lefthook/v2@v2.1.10
 ```
+
+`lefthook` no se instala aparte: es `devDependency` del repo y se usa con
+`pnpm exec` (ver [Hooks locales](#hooks-locales-lefthook--gitleaks)).
 
 Si estás en ARM, cambia `hadolint-linux-x86_64` por `hadolint-linux-arm64`.
 
@@ -86,10 +87,12 @@ go install github.com/pressly/goose/v3/cmd/goose@v3.24.1
 go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.29.0
 go install github.com/oasdiff/oasdiff@v1.35.0
 go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@v2.8.2
-go install github.com/evilmartians/lefthook/v2@v2.1.10
 go install github.com/gitleaks/gitleaks/v8@v8.30.1
 go install github.com/aquasecurity/trivy/cmd/trivy@v0.76.1
 ```
+
+`lefthook` no va en esta lista: es `devDependency` del repo y se resuelve con
+`pnpm exec lefthook` después de `pnpm install`.
 
 Hadolint:
 
@@ -126,8 +129,9 @@ export PATH="$HOME/go/bin:$HOME/.local/bin:$PATH"
 Comprueba:
 
 ```bash
-which goose sqlc oasdiff oapi-codegen lefthook
+which goose sqlc oasdiff oapi-codegen
 goose --version
+pnpm exec lefthook version
 ```
 
 ### pnpm con corepack
@@ -198,17 +202,20 @@ los `replace-with-*`. `.env` no se commitea.
 
 ## Hooks locales (lefthook + gitleaks)
 
-`.npmrc` tiene `ignore-scripts=true`, así que los hooks no se instalan solos:
+`lefthook` es una `devDependency` (2.1.10): `pnpm install` lo deja en
+`node_modules` y `pnpm exec` lo resuelve, sin instalarlo aparte ni tenerlo en el
+PATH. `.npmrc` tiene `ignore-scripts=true`, así que los hooks no se instalan
+solos:
 
 ```bash
 pnpm install
-lefthook install
+pnpm exec lefthook install
 ls -l .git/hooks/pre-commit .git/hooks/pre-push
 ```
 
-Sin `lefthook install` no hay hooks. El `pre-commit` corre gofmt, `go vet`,
-Prettier/oxlint (cuando exista `apps/web`) y Gitleaks; el `pre-push` corre
-`pnpm verify`, `pnpm test:api` y verifica que el contrato esté al día.
+Sin `pnpm exec lefthook install` no hay hooks. El `pre-commit` corre gofmt,
+`go vet`, Prettier/oxlint (cuando exista `apps/web`) y Gitleaks; el `pre-push`
+corre `pnpm verify`, `pnpm test:api` y verifica que el contrato esté al día.
 
 Prueba que Gitleaks bloquea un secreto (el commit debe abortar):
 
