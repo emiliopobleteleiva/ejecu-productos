@@ -10,6 +10,7 @@ permissions: {}
 env:
   TRIVY_VERSION: v0.76.1
   GOVULNCHECK_VERSION: v1.9.0
+  OASDIFF_VERSION: v1.35.0
   DOCKLE_VERSION: v0.4.15
 
 jobs:
@@ -46,6 +47,11 @@ jobs:
 
       - name: contrato al dia
         run: pnpm codegen && git diff --exit-code
+
+      - name: contrato compatible con main
+        run: |
+          git show origin/main:contracts/openapi.yaml > /tmp/base.yaml
+          go run github.com/oasdiff/oasdiff@${OASDIFF_VERSION} breaking /tmp/base.yaml contracts/openapi.yaml --fail-on ERR
 
       - name: cobertura
         run: pnpm test:api
