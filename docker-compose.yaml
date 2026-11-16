@@ -1,0 +1,56 @@
+# Compose de desarrollo del servicio de productos (DAS, sección 4).
+# Hito 1: postgres + backend. La API todavía sirve datos simulados en memoria,
+# así que DATABASE_URL se pasa pero aún no se lee.
+# Hito 2 agrega `migrate` (Dockerfile.migrate) y `seed`.
+# Ensamblaje LPS agrega `frontend` (apps/web) y el perfil dev con mailpit.
+
+name: ejecu-productos
+
+services:
+  postgres:
+    image: postgres:17.11-alpine@sha256:e5d2edd28b1f8d40a0a6c0c9cdc545b19b56a0d5d88f94bc11a97d970d4700d0
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-productos}
+      # Obligatoria, sin valor por defecto: una credencial por defecto en el repo
+      # es una credencial filtrada. Se define en .env, que no se versiona.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?define POSTGRES_PASSWORD en .env}
+      POSTGRES_DB: ${POSTGRES_DB:-productos}
+      TZ: ${TZ:-America/Santiago}
+    ports:
+      # Solo loopback, para psql y sqlc desde el host. 5433 para no chocar con
+      # un PostgreSQL instalado en la máquina.
+      - "127.0.0.1:${POSTGRES_PUBLISHED_PORT:-5433}:5432"
+    volumes:
+      - postgres-datos:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      args:
+        VERSION: ${VERSION:-local}
+    environment:
+      API_PORT: "8080"
+      API_ENV: ${API_ENV:-dev}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5130}
+      TZ: ${TZ:-America/Santiago}
+      # TODO Hito 2: DATABASE_URL y AUTH_JWKS_URL cuando existan el store y la
+      # autenticación. Hoy la API no se conecta a PostgreSQL.
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      # 51N1 con N=3: 5131. Puerto publicado solo en loopback (DAS, sección 4).
+      - "127.0.0.1:${API_PUBLISHED_PORT:-5131}:8080"
+    # Sin healthcheck: el runtime distroless no trae shell, curl ni wget.
+    restart: unless-stopped
+
+volumes:
+  postgres-datos:
