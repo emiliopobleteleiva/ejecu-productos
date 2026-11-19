@@ -1,0 +1,49 @@
+# Dependabot solo para seguridad. El DAS fija versiones exactas para todo el
+# curso y cambiar una pieza del stack requiere aprobación del jefe de proyecto,
+# así que no se abren PRs de versión (open-pull-requests-limit: 0).
+# Las alertas de vulnerabilidad siguen activas: Dependabot abre un PR solo
+# cuando una dependencia tiene un CVE con versión corregida.
+version: 2
+
+updates:
+  - package-ecosystem: gomod
+    directory: /apps/api
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0
+    commit-message:
+      prefix: fix
+      include: scope
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0
+    commit-message:
+      prefix: ci
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0
+    commit-message:
+      prefix: fix
+      include: scope
+
+  - package-ecosystem: docker
+    directory: /apps/api
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0
+    commit-message:
+      prefix: build
+
+  - package-ecosystem: docker-compose
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0
+    commit-message:
+      prefix: build
