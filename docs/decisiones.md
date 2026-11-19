@@ -108,5 +108,4 @@ más.
    Hoy solo UUID, para no acoplar el contrato.
 5. ¿El código del departamento viene de una tabla local o de otro servicio?
 
-Ver también [`modos-de-falla.md`](./modos-de-falla.md) y
-[`arquitectura.md`](./arquitectura.md).
+Ver también [`modos-de-falla.md`](./modos-de-falla.md).

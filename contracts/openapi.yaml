@@ -310,7 +310,7 @@ components:
         - actualizado_en
       type: object
 info:
-  description: CRUD de productos con SKU único, categorización múltiple, costo entero en pesos y flag de venta.
+  description: CRUD de productos con SKU autogenerado e inmutable por departamento, categorización múltiple, costo unitario con IVA incluido y flag de venta.
   title: Servicio de Productos
   version: dev
 openapi: 3.1.0
