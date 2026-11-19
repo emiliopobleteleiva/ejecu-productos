@@ -1,76 +1,49 @@
-# Dependabot abre los PR de actualización (DAS §3: nadie sube versiones a mano
-# dentro de un PR de funcionalidad). Cada PR pasa por el pipeline completo.
+# Dependabot solo para seguridad. El DAS fija versiones exactas para todo el
+# curso y cambiar una pieza del stack requiere aprobación del jefe de proyecto,
+# así que no se abren PRs de versión (open-pull-requests-limit: 0).
+# Las alertas de vulnerabilidad siguen activas: Dependabot abre un PR solo
+# cuando una dependencia tiene un CVE con versión corregida.
 version: 2
 
 updates:
-  # Módulos Go de la API (go.mod, go.sum y la directiva toolchain).
   - package-ecosystem: gomod
     directory: /apps/api
     schedule:
       interval: weekly
-      day: monday
-      time: "09:00"
-      timezone: America/Santiago
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 0
     commit-message:
-      prefix: chore
+      prefix: fix
       include: scope
-    groups:
-      go-menores:
-        update-types: [minor, patch]
 
-  # Actions del workflow. Están fijadas por SHA: Dependabot actualiza el SHA
-  # y el comentario con la versión.
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
-      day: monday
-      time: "09:00"
-      timezone: America/Santiago
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 0
     commit-message:
       prefix: ci
-    groups:
-      actions:
-        patterns: ["*"]
 
-  # Dependencias de pnpm en la raíz (hoy solo lefthook; luego apps/web).
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: weekly
-      day: monday
-      time: "09:00"
-      timezone: America/Santiago
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 0
     commit-message:
-      prefix: chore
+      prefix: fix
       include: scope
-    groups:
-      npm-menores:
-        update-types: [minor, patch]
 
-  # Imágenes base del Dockerfile de la API (tag + digest).
   - package-ecosystem: docker
     directory: /apps/api
     schedule:
       interval: weekly
-      day: monday
-      time: "09:00"
-      timezone: America/Santiago
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 0
     commit-message:
       prefix: build
 
-  # Imagen de PostgreSQL del compose de desarrollo.
   - package-ecosystem: docker-compose
     directory: /
     schedule:
       interval: weekly
-      day: monday
-      time: "09:00"
-      timezone: America/Santiago
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 0
     commit-message:
       prefix: build
