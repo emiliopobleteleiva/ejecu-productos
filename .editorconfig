@@ -1,0 +1,26 @@
+# Formato base para cualquier editor. gofmt y Prettier mandan sobre esto
+# en sus lenguajes; este archivo cubre todo lo demás (YAML, Dockerfile, md).
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+# gofmt usa tabs.
+[*.go]
+indent_style = tab
+
+[{Makefile,*.mk}]
+indent_style = tab
+
+# En Markdown, dos espacios al final son un salto de línea (el DAS los usa).
+[*.md]
+trim_trailing_whitespace = false
+
+# Ancho del DAS para Prettier (frontend).
+[*.{js,jsx,ts,tsx,json,css}]
+max_line_length = 90
