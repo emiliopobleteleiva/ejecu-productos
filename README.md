@@ -9,8 +9,11 @@ goose y la lógica real quedan para el Hito 2.
 ## Estado actual
 
 - CRUD de productos con datos en memoria.
-- SKU único, categorización múltiple con `categoria_ids []string`, costo
-  `int64` en pesos y flag `permite_venta`.
+- SKU autogenerado e inmutable por departamento (`BEB-000001`): el cliente no lo
+  envía y no se puede cambiar.
+- `costo_unitario` `int64` en pesos con IVA incluido y `tipo_impuesto` (`IVA` o
+  `EXENTO`).
+- Categorización múltiple con `categoria_ids []string` y flag `permite_venta`.
 - Contrato OpenAPI generado desde los structs de Huma.
 - Levanta con `docker compose up -d --build` (API + PostgreSQL).
 - Hooks locales de formato, `go vet` y Gitleaks con `lefthook install`.
@@ -94,7 +97,7 @@ Resumen:
 | Método | Ruta | Operación |
 |---|---|---|
 | `POST` | `/api/productos` | Crear producto |
-| `GET` | `/api/productos` | Listar productos con filtros `categoria_id` y `permite_venta` |
+| `GET` | `/api/productos` | Listar productos con filtros `categoria_id`, `departamento_id` y `permite_venta` |
 | `GET` | `/api/productos/{id}` | Obtener producto por UUID |
 | `PATCH` | `/api/productos/{id}` | Actualizar parcialmente |
 | `DELETE` | `/api/productos/{id}` | Desactivar (baja lógica) |

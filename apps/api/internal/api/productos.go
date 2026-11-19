@@ -9,20 +9,23 @@ import (
 
 // Producto representa un producto del catálogo.
 //
-// La categorización es múltiple: un producto puede pertenecer a una o más
-// categorías. En la base de datos del Hito 2 se modelará con la tabla puente
+// El SKU lo genera el servicio a partir del departamento y es inmutable: no se
+// acepta en el cuerpo de creación ni se puede modificar con PATCH. La
+// categorización es múltiple; en el Hito 2 se modela con la tabla puente
 // producto_categorias(producto_id, categoria_id).
 type Producto struct {
-	ID            string    `json:"id" format:"uuid" readOnly:"true" doc:"Identificador único del producto." example:"3fa85f64-5717-4562-b3fc-2c963f66afa6"`
-	SKU           string    `json:"sku" minLength:"3" maxLength:"64" pattern:"^[A-Z0-9][A-Z0-9_-]{2,63}$" doc:"SKU único del producto." example:"PROD-001"`
-	Nombre        string    `json:"nombre" minLength:"1" maxLength:"200" doc:"Nombre visible del producto." example:"Café molido 1 kg"`
-	Descripcion   string    `json:"descripcion,omitempty" maxLength:"1000" doc:"Descripción libre del producto." example:"Café tostado de origen."`
-	CategoriaIDs  []string  `json:"categoria_ids" nullable:"false" minItems:"1" uniqueItems:"true" doc:"Identificadores UUID de las categorías a las que pertenece el producto." example:"7c9e6679-7425-40de-944b-e07fc1f90ae7,16fd2706-8baf-433b-82eb-8c7fada847da"`
-	Costo         int64     `json:"costo" minimum:"0" doc:"Costo en pesos chilenos, entero." example:"12990"`
-	PermiteVenta  bool      `json:"permite_venta" doc:"Indica si el producto puede venderse." example:"true"`
-	Activo        bool      `json:"activo" readOnly:"true" doc:"Indica si el producto está activo." example:"true"`
-	CreadoEn      time.Time `json:"creado_en" readOnly:"true" doc:"Fecha de creación (timestamptz en Hito 2)."`
-	ActualizadoEn time.Time `json:"actualizado_en" readOnly:"true" doc:"Fecha de última actualización (timestamptz en Hito 2)."`
+	ID             string    `json:"id" format:"uuid" readOnly:"true" doc:"Identificador único del producto." example:"3fa85f64-5717-4562-b3fc-2c963f66afa6"`
+	SKU            string    `json:"sku" readOnly:"true" pattern:"^[A-Z0-9][A-Z0-9_-]{2,63}$" doc:"SKU autogenerado a partir del departamento. Es inmutable." example:"BEB-000001"`
+	DepartamentoID string    `json:"departamento_id" format:"uuid" doc:"Departamento del producto. Determina el prefijo del SKU." example:"1b4e28ba-2fa1-11d2-883f-0016d3cca427"`
+	Nombre         string    `json:"nombre" minLength:"1" maxLength:"200" doc:"Nombre visible del producto." example:"Café molido 1 kg"`
+	Descripcion    string    `json:"descripcion,omitempty" maxLength:"1000" doc:"Descripción libre del producto." example:"Café tostado de origen."`
+	CategoriaIDs   []string  `json:"categoria_ids" nullable:"false" minItems:"1" uniqueItems:"true" doc:"Identificadores UUID de las categorías a las que pertenece el producto." example:"7c9e6679-7425-40de-944b-e07fc1f90ae7,16fd2706-8baf-433b-82eb-8c7fada847da"`
+	CostoUnitario  int64     `json:"costo_unitario" minimum:"0" doc:"Costo unitario en pesos chilenos, entero, IVA incluido." example:"12990"`
+	TipoImpuesto   string    `json:"tipo_impuesto" enum:"IVA,EXENTO" doc:"Tratamiento tributario del producto." example:"IVA"`
+	PermiteVenta   bool      `json:"permite_venta" doc:"Indica si el producto puede venderse." example:"true"`
+	Activo         bool      `json:"activo" readOnly:"true" doc:"Indica si el producto está activo." example:"true"`
+	CreadoEn       time.Time `json:"creado_en" readOnly:"true" doc:"Fecha de creación (timestamptz en Hito 2)."`
+	ActualizadoEn  time.Time `json:"actualizado_en" readOnly:"true" doc:"Fecha de última actualización (timestamptz en Hito 2)."`
 }
 
 // TransformSchema marca cada elemento de categoria_ids como UUID. Huma v2 no
@@ -34,13 +37,16 @@ func (Producto) TransformSchema(_ huma.Registry, s *huma.Schema) *huma.Schema {
 }
 
 // CrearProductoBody es el cuerpo de la creación de un producto.
+//
+// No incluye sku: lo genera el servicio a partir de departamento_id.
 type CrearProductoBody struct {
-	SKU          string   `json:"sku" required:"true" minLength:"3" maxLength:"64" pattern:"^[A-Z0-9][A-Z0-9_-]{2,63}$" doc:"SKU único del producto." example:"PROD-001"`
-	Nombre       string   `json:"nombre" required:"true" minLength:"1" maxLength:"200" doc:"Nombre visible del producto." example:"Café molido 1 kg"`
-	Descripcion  string   `json:"descripcion,omitempty" maxLength:"1000" doc:"Descripción libre del producto." example:"Café tostado de origen."`
-	CategoriaIDs []string `json:"categoria_ids" required:"true" nullable:"false" minItems:"1" uniqueItems:"true" doc:"Identificadores UUID de las categorías. Debe incluir al menos una." example:"7c9e6679-7425-40de-944b-e07fc1f90ae7,16fd2706-8baf-433b-82eb-8c7fada847da"`
-	Costo        int64    `json:"costo" required:"true" minimum:"0" doc:"Costo en pesos chilenos, entero." example:"12990"`
-	PermiteVenta bool     `json:"permite_venta" required:"true" doc:"Indica si el producto puede venderse." example:"true"`
+	DepartamentoID string   `json:"departamento_id" required:"true" format:"uuid" doc:"Departamento al que pertenece el producto. Define el prefijo del SKU." example:"1b4e28ba-2fa1-11d2-883f-0016d3cca427"`
+	Nombre         string   `json:"nombre" required:"true" minLength:"1" maxLength:"200" doc:"Nombre visible del producto." example:"Café molido 1 kg"`
+	Descripcion    string   `json:"descripcion,omitempty" maxLength:"1000" doc:"Descripción libre del producto." example:"Café tostado de origen."`
+	CategoriaIDs   []string `json:"categoria_ids" required:"true" nullable:"false" minItems:"1" uniqueItems:"true" doc:"Identificadores UUID de las categorías. Debe incluir al menos una." example:"7c9e6679-7425-40de-944b-e07fc1f90ae7,16fd2706-8baf-433b-82eb-8c7fada847da"`
+	CostoUnitario  int64    `json:"costo_unitario" required:"true" minimum:"0" doc:"Costo unitario en pesos chilenos, entero, IVA incluido." example:"12990"`
+	TipoImpuesto   string   `json:"tipo_impuesto" required:"true" enum:"IVA,EXENTO" doc:"Tratamiento tributario del producto." example:"IVA"`
+	PermiteVenta   bool     `json:"permite_venta" required:"true" doc:"Indica si el producto puede venderse." example:"true"`
 }
 
 func (CrearProductoBody) TransformSchema(_ huma.Registry, s *huma.Schema) *huma.Schema {
@@ -61,8 +67,9 @@ type CrearProductoOutput struct {
 
 // ListarProductosInput es la entrada de GET /api/productos.
 type ListarProductosInput struct {
-	CategoriaID  string                  `query:"categoria_id" format:"uuid" doc:"Filtra por una categoría (UUID). Es solo un filtro, no un campo del producto." example:"7c9e6679-7425-40de-944b-e07fc1f90ae7"`
-	PermiteVenta ParametroOpcional[bool] `query:"permite_venta" doc:"Filtra por disponibilidad de venta." example:"true"`
+	CategoriaID    string                  `query:"categoria_id" format:"uuid" doc:"Filtra por una categoría (UUID). Es solo un filtro, no un campo del producto." example:"7c9e6679-7425-40de-944b-e07fc1f90ae7"`
+	DepartamentoID string                  `query:"departamento_id" format:"uuid" doc:"Filtra por departamento (UUID)." example:"1b4e28ba-2fa1-11d2-883f-0016d3cca427"`
+	PermiteVenta   ParametroOpcional[bool] `query:"permite_venta" doc:"Filtra por disponibilidad de venta." example:"true"`
 }
 
 // ListarProductosBody es el cuerpo de la respuesta del listado.
@@ -88,14 +95,14 @@ type ObtenerProductoOutput struct {
 
 // ActualizarProductoBody es el cuerpo de PATCH /api/productos/{id}. Los
 // punteros permiten distinguir "campo no enviado" de "campo enviado con valor
-// cero".
+// cero". No incluye sku ni departamento_id: ambos son inmutables.
 type ActualizarProductoBody struct {
-	SKU          *string   `json:"sku,omitempty" minLength:"3" maxLength:"64" pattern:"^[A-Z0-9][A-Z0-9_-]{2,63}$" doc:"Nuevo SKU único del producto." example:"PROD-001"`
-	Nombre       *string   `json:"nombre,omitempty" minLength:"1" maxLength:"200" doc:"Nuevo nombre visible del producto." example:"Café molido 1 kg"`
-	Descripcion  *string   `json:"descripcion,omitempty" maxLength:"1000" doc:"Nueva descripción libre del producto." example:"Café tostado de origen."`
-	CategoriaIDs *[]string `json:"categoria_ids,omitempty" nullable:"false" minItems:"1" uniqueItems:"true" doc:"Nuevos identificadores UUID de categorías. Si se envía, debe incluir al menos una." example:"7c9e6679-7425-40de-944b-e07fc1f90ae7"`
-	Costo        *int64    `json:"costo,omitempty" minimum:"0" doc:"Nuevo costo en pesos chilenos, entero." example:"12990"`
-	PermiteVenta *bool     `json:"permite_venta,omitempty" doc:"Nuevo valor del flag de venta." example:"true"`
+	Nombre        *string   `json:"nombre,omitempty" minLength:"1" maxLength:"200" doc:"Nuevo nombre visible del producto." example:"Café molido 1 kg"`
+	Descripcion   *string   `json:"descripcion,omitempty" maxLength:"1000" doc:"Nueva descripción libre del producto." example:"Café tostado de origen."`
+	CategoriaIDs  *[]string `json:"categoria_ids,omitempty" nullable:"false" minItems:"1" uniqueItems:"true" doc:"Nuevos identificadores UUID de categorías. Si se envía, debe incluir al menos una." example:"7c9e6679-7425-40de-944b-e07fc1f90ae7"`
+	CostoUnitario *int64    `json:"costo_unitario,omitempty" minimum:"0" doc:"Nuevo costo unitario en pesos chilenos, entero, IVA incluido." example:"12990"`
+	TipoImpuesto  *string   `json:"tipo_impuesto,omitempty" enum:"IVA,EXENTO" doc:"Nuevo tratamiento tributario del producto." example:"IVA"`
+	PermiteVenta  *bool     `json:"permite_venta,omitempty" doc:"Nuevo valor del flag de venta." example:"true"`
 }
 
 func (ActualizarProductoBody) TransformSchema(_ huma.Registry, s *huma.Schema) *huma.Schema {

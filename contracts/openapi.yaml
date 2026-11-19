@@ -20,8 +20,8 @@ components:
           minItems: 1
           type: array
           uniqueItems: true
-        costo:
-          description: Nuevo costo en pesos chilenos, entero.
+        costo_unitario:
+          description: Nuevo costo unitario en pesos chilenos, entero, IVA incluido.
           examples:
             - 12990
           format: int64
@@ -45,13 +45,13 @@ components:
           examples:
             - true
           type: boolean
-        sku:
-          description: Nuevo SKU único del producto.
+        tipo_impuesto:
+          description: Nuevo tratamiento tributario del producto.
+          enum:
+            - IVA
+            - EXENTO
           examples:
-            - PROD-001
-          maxLength: 64
-          minLength: 3
-          pattern: ^[A-Z0-9][A-Z0-9_-]{2,63}$
+            - IVA
           type: string
       type: object
     CrearProductoBody:
@@ -75,13 +75,19 @@ components:
           minItems: 1
           type: array
           uniqueItems: true
-        costo:
-          description: Costo en pesos chilenos, entero.
+        costo_unitario:
+          description: Costo unitario en pesos chilenos, entero, IVA incluido.
           examples:
             - 12990
           format: int64
           minimum: 0
           type: integer
+        departamento_id:
+          description: Departamento al que pertenece el producto. Define el prefijo del SKU.
+          examples:
+            - 1b4e28ba-2fa1-11d2-883f-0016d3cca427
+          format: uuid
+          type: string
         descripcion:
           description: Descripción libre del producto.
           examples:
@@ -100,19 +106,20 @@ components:
           examples:
             - true
           type: boolean
-        sku:
-          description: SKU único del producto.
+        tipo_impuesto:
+          description: Tratamiento tributario del producto.
+          enum:
+            - IVA
+            - EXENTO
           examples:
-            - PROD-001
-          maxLength: 64
-          minLength: 3
-          pattern: ^[A-Z0-9][A-Z0-9_-]{2,63}$
+            - IVA
           type: string
       required:
-        - sku
+        - departamento_id
         - nombre
         - categoria_ids
-        - costo
+        - costo_unitario
+        - tipo_impuesto
         - permite_venta
       type: object
     ErrorDetail:
@@ -231,8 +238,8 @@ components:
           minItems: 1
           type: array
           uniqueItems: true
-        costo:
-          description: Costo en pesos chilenos, entero.
+        costo_unitario:
+          description: Costo unitario en pesos chilenos, entero, IVA incluido.
           examples:
             - 12990
           format: int64
@@ -242,6 +249,12 @@ components:
           description: Fecha de creación (timestamptz en Hito 2).
           format: date-time
           readOnly: true
+          type: string
+        departamento_id:
+          description: Departamento del producto. Determina el prefijo del SKU.
+          examples:
+            - 1b4e28ba-2fa1-11d2-883f-0016d3cca427
+          format: uuid
           type: string
         descripcion:
           description: Descripción libre del producto.
@@ -269,19 +282,28 @@ components:
             - true
           type: boolean
         sku:
-          description: SKU único del producto.
+          description: SKU autogenerado a partir del departamento. Es inmutable.
           examples:
-            - PROD-001
-          maxLength: 64
-          minLength: 3
+            - BEB-000001
           pattern: ^[A-Z0-9][A-Z0-9_-]{2,63}$
+          readOnly: true
+          type: string
+        tipo_impuesto:
+          description: Tratamiento tributario del producto.
+          enum:
+            - IVA
+            - EXENTO
+          examples:
+            - IVA
           type: string
       required:
         - id
         - sku
+        - departamento_id
         - nombre
         - categoria_ids
-        - costo
+        - costo_unitario
+        - tipo_impuesto
         - permite_venta
         - activo
         - creado_en
@@ -295,7 +317,7 @@ openapi: 3.1.0
 paths:
   /api/productos:
     get:
-      description: Lista los productos activos y permite filtrar por categoría y por disponibilidad de venta.
+      description: Lista los productos activos y permite filtrar por categoría, por departamento y por disponibilidad de venta.
       operationId: listar-productos
       parameters:
         - description: Filtra por una categoría (UUID). Es solo un filtro, no un campo del producto.
@@ -307,6 +329,17 @@ paths:
             description: Filtra por una categoría (UUID). Es solo un filtro, no un campo del producto.
             examples:
               - 7c9e6679-7425-40de-944b-e07fc1f90ae7
+            format: uuid
+            type: string
+        - description: Filtra por departamento (UUID).
+          example: 1b4e28ba-2fa1-11d2-883f-0016d3cca427
+          explode: false
+          in: query
+          name: departamento_id
+          schema:
+            description: Filtra por departamento (UUID).
+            examples:
+              - 1b4e28ba-2fa1-11d2-883f-0016d3cca427
             format: uuid
             type: string
         - description: Filtra por disponibilidad de venta.
@@ -336,7 +369,7 @@ paths:
       tags:
         - productos
     post:
-      description: Crea un producto con SKU único y al menos una categoría.
+      description: Crea un producto con SKU autogenerado a partir del departamento y al menos una categoría. El SKU es inmutable.
       operationId: crear-producto
       requestBody:
         content:
@@ -419,7 +452,7 @@ paths:
       tags:
         - productos
     patch:
-      description: Actualiza solo los campos enviados del producto.
+      description: Actualiza solo los campos enviados. El SKU y el departamento son inmutables.
       operationId: actualizar-producto
       parameters:
         - description: Identificador UUID del producto.
