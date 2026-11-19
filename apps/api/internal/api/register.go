@@ -28,6 +28,15 @@ func Registrar(api huma.API, manejadores *ManejadoresProductos) {
 	}, manejadores.listar)
 
 	huma.Register(api, huma.Operation{
+		OperationID: "listar-departamentos",
+		Method:      http.MethodGet,
+		Path:        "/api/departamentos",
+		Summary:     "Lista los departamentos disponibles",
+		Description: "Devuelve el catálogo de departamentos con el id que se envía al crear un producto y el código que forma su SKU.",
+		Tags:        []string{"departamentos"},
+	}, manejadores.listarDepartamentos)
+
+	huma.Register(api, huma.Operation{
 		OperationID: "obtener-producto",
 		Method:      http.MethodGet,
 		Path:        "/api/productos/{id}",

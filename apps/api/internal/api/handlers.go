@@ -6,20 +6,11 @@ import (
 	"encoding/hex"
 	"fmt"
 	"sort"
-	"strings"
 	"sync"
 	"time"
 
 	"github.com/danielgtaylor/huma/v2"
 )
-
-// departamentosDemo simula la tabla de departamentos del Hito 2. El código es
-// un dato del departamento, no se deriva del UUID: acá se mantiene a mano y en
-// el Hito 2 se resuelve desde la base o desde el servicio dueño del dato.
-var departamentosDemo = map[string]string{
-	"1b4e28ba-2fa1-11d2-883f-0016d3cca427": "BEB",
-	"2c4e28ba-2fa1-11d2-883f-0016d3cca428": "HOG",
-}
 
 // ManejadoresProductos implementa los handlers del Hito 1 con datos en
 // memoria. Esta estructura y su almacenamiento se reemplazan por service y
@@ -81,15 +72,20 @@ func NuevosManejadoresProductos() *ManejadoresProductos {
 // del departamento; el cliente no lo envía.
 func (m *ManejadoresProductos) crear(_ context.Context, input *CrearProductoInput) (*CrearProductoOutput, error) {
 	// TODO: permiso productos:administrar
-	// TODO Hito 2: validar que el departamento exista y generar el SKU dentro
-	// de la misma transacción que inserta el producto.
+	// TODO Hito 2: generar el SKU dentro de la misma transacción que inserta el
+	// producto. La existencia del departamento la garantiza la FK.
 	m.mu.Lock()
 	defer m.mu.Unlock()
+
+	departamento, existe := buscarDepartamento(input.Body.DepartamentoID)
+	if !existe {
+		return nil, huma.Error422UnprocessableEntity("El departamento indicado no existe.")
+	}
 
 	ahora := time.Now().UTC()
 	producto := &Producto{
 		ID:             nuevoUUID(),
-		SKU:            m.nuevoSKU(input.Body.DepartamentoID),
+		SKU:            m.nuevoSKU(departamento.ID, departamento.Codigo),
 		DepartamentoID: input.Body.DepartamentoID,
 		Nombre:         input.Body.Nombre,
 		Descripcion:    input.Body.Descripcion,
@@ -210,23 +206,12 @@ func (m *ManejadoresProductos) eliminar(_ context.Context, input *EliminarProduc
 // nuevoSKU arma el SKU del producto y avanza el secuencial del departamento.
 // Debe llamarse con el mutex tomado. En el Hito 2 el secuencial sale de una
 // secuencia por departamento dentro de la misma transacción del insert.
-func (m *ManejadoresProductos) nuevoSKU(departamentoID string) string {
+//
+// TODO Hito 2: el formato (separador y cantidad de dígitos) es un parámetro
+// por instancia, según la Base técnica.
+func (m *ManejadoresProductos) nuevoSKU(departamentoID, codigo string) string {
 	m.secuencias[departamentoID]++
-	return fmt.Sprintf("%s-%06d", codigoDepartamento(departamentoID), m.secuencias[departamentoID])
-}
-
-// codigoDepartamento devuelve el prefijo del SKU. Con un departamento conocido
-// usa su código; con uno desconocido cae al prefijo del UUID para no dejar el
-// producto sin SKU.
-func codigoDepartamento(departamentoID string) string {
-	if codigo, ok := departamentosDemo[departamentoID]; ok {
-		return codigo
-	}
-	limpio := strings.ToUpper(strings.ReplaceAll(departamentoID, "-", ""))
-	if len(limpio) < 4 {
-		return "GEN"
-	}
-	return limpio[:4]
+	return fmt.Sprintf("%s-%06d", codigo, m.secuencias[departamentoID])
 }
 
 // clonarProducto devuelve una copia segura para no exponer los slices

@@ -64,6 +64,24 @@ func TestProductos(t *testing.T) {
 
 	var creado Producto
 
+	t.Run("catalogo de departamentos", func(t *testing.T) {
+		rec := ejecutar(t, mux, http.MethodGet, "/api/departamentos", "")
+		if rec.Code != http.StatusOK {
+			t.Fatalf("esperaba 200, obtuve %d: %s", rec.Code, rec.Body.String())
+		}
+		var body ListarDepartamentosBody
+		if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+			t.Fatalf("respuesta inválida: %v", err)
+		}
+		if body.Total != 2 || len(body.Departamentos) != 2 {
+			t.Fatalf("esperaba 2 departamentos, obtuve %d", body.Total)
+		}
+		primero := body.Departamentos[0]
+		if primero.Codigo != "BEB" || primero.ID != departamentoBebidas || primero.Nombre == "" {
+			t.Fatalf("departamento inesperado: %+v", primero)
+		}
+	})
+
 	t.Run("crear genera el sku desde el departamento", func(t *testing.T) {
 		rec := ejecutar(t, mux, http.MethodPost, "/api/productos", cuerpoCreacion(departamentoBebidas, ""))
 		if rec.Code != http.StatusCreated {
@@ -101,6 +119,14 @@ func TestProductos(t *testing.T) {
 		}
 		if otro.SKU != "HOG-000002" {
 			t.Fatalf("esperaba HOG-000002, obtuve %q", otro.SKU)
+		}
+	})
+
+	t.Run("departamento inexistente al crear", func(t *testing.T) {
+		cuerpo := `{"departamento_id":"00000000-0000-4000-8000-000000000000","nombre":"Fantasma","categoria_ids":["` + categoriaBebidas + `"],"costo_unitario":1000,"tipo_impuesto":"IVA","permite_venta":true}`
+		rec := ejecutar(t, mux, http.MethodPost, "/api/productos", cuerpo)
+		if rec.Code != http.StatusUnprocessableEntity {
+			t.Fatalf("esperaba 422, obtuve %d: %s", rec.Code, rec.Body.String())
 		}
 	})
 

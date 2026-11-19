@@ -16,7 +16,7 @@ import (
 type Producto struct {
 	ID             string    `json:"id" format:"uuid" readOnly:"true" doc:"Identificador único del producto." example:"3fa85f64-5717-4562-b3fc-2c963f66afa6"`
 	SKU            string    `json:"sku" readOnly:"true" pattern:"^[A-Z0-9][A-Z0-9_-]{2,63}$" doc:"SKU autogenerado a partir del departamento. Es inmutable." example:"BEB-000001"`
-	DepartamentoID string    `json:"departamento_id" format:"uuid" doc:"Departamento del producto. Determina el prefijo del SKU." example:"1b4e28ba-2fa1-11d2-883f-0016d3cca427"`
+	DepartamentoID string    `json:"departamento_id" format:"uuid" doc:"Departamento del producto. Determina el prefijo del SKU; ver GET /api/departamentos." example:"1b4e28ba-2fa1-11d2-883f-0016d3cca427"`
 	Nombre         string    `json:"nombre" minLength:"1" maxLength:"200" doc:"Nombre visible del producto." example:"Café molido 1 kg"`
 	Descripcion    string    `json:"descripcion,omitempty" maxLength:"1000" doc:"Descripción libre del producto." example:"Café tostado de origen."`
 	CategoriaIDs   []string  `json:"categoria_ids" nullable:"false" minItems:"1" uniqueItems:"true" doc:"Identificadores UUID de las categorías a las que pertenece el producto." example:"7c9e6679-7425-40de-944b-e07fc1f90ae7,16fd2706-8baf-433b-82eb-8c7fada847da"`
@@ -40,7 +40,7 @@ func (Producto) TransformSchema(_ huma.Registry, s *huma.Schema) *huma.Schema {
 //
 // No incluye sku: lo genera el servicio a partir de departamento_id.
 type CrearProductoBody struct {
-	DepartamentoID string   `json:"departamento_id" required:"true" format:"uuid" doc:"Departamento al que pertenece el producto. Define el prefijo del SKU." example:"1b4e28ba-2fa1-11d2-883f-0016d3cca427"`
+	DepartamentoID string   `json:"departamento_id" required:"true" format:"uuid" doc:"Departamento al que pertenece el producto. Define el prefijo del SKU; ver GET /api/departamentos." example:"1b4e28ba-2fa1-11d2-883f-0016d3cca427"`
 	Nombre         string   `json:"nombre" required:"true" minLength:"1" maxLength:"200" doc:"Nombre visible del producto." example:"Café molido 1 kg"`
 	Descripcion    string   `json:"descripcion,omitempty" maxLength:"1000" doc:"Descripción libre del producto." example:"Café tostado de origen."`
 	CategoriaIDs   []string `json:"categoria_ids" required:"true" nullable:"false" minItems:"1" uniqueItems:"true" doc:"Identificadores UUID de las categorías. Debe incluir al menos una." example:"7c9e6679-7425-40de-944b-e07fc1f90ae7,16fd2706-8baf-433b-82eb-8c7fada847da"`

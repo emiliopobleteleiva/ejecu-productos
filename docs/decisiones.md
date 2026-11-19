@@ -31,7 +31,10 @@ contrato.
 ## 2. Departamento
 
 **Decisión.** Todo producto pertenece a un departamento. `departamento_id` es un
-UUID obligatorio al crear, inmutable después, y filtrable en el listado.
+UUID obligatorio al crear, inmutable después, y filtrable en el listado. El
+catálogo se publica en `GET /api/departamentos` (`id`, `codigo`, `nombre`) para
+que el front y los servicios consumidores sepan qué id enviar; un id que no
+existe responde `422`.
 
 **Hito 2.** FK a la tabla `departamentos`. El código que usa el SKU es un dato del
 departamento, no se deriva del UUID: en el Hito 1 hay un catálogo simulado en el

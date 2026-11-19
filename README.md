@@ -96,6 +96,7 @@ Resumen:
 
 | Método | Ruta | Operación |
 |---|---|---|
+| `GET` | `/api/departamentos` | Catálogo de departamentos (`id`, `codigo`, `nombre`) |
 | `POST` | `/api/productos` | Crear producto |
 | `GET` | `/api/productos` | Listar productos con filtros `categoria_id`, `departamento_id` y `permite_venta` |
 | `GET` | `/api/productos/{id}` | Obtener producto por UUID |

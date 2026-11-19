@@ -50,12 +50,14 @@ pueden leer el mismo contador y producir el mismo SKU.
 existir.
 
 **Cómo se previene.**
-- El service verifica que el departamento exista antes de generar el SKU.
+- El handler simulado (y el service en el Hito 2) verifica el departamento contra
+  el catálogo antes de generar el SKU. El catálogo se publica en
+  `GET /api/departamentos`.
 - En la base, `productos.departamento_id` tiene FK contra `departamentos`.
 
 **Cómo se verifica en e2e.**
-- `POST` con un UUID bien formado que no exista → `422` con detalle en
-  `body.departamento_id`.
+- `POST` con un UUID bien formado que no exista → `422` con detalle
+  `"El departamento indicado no existe."`.
 - Confirmar que no se consumió ningún secuencial del departamento.
 
 ## 3. `categoria_ids` con un UUID inexistente
