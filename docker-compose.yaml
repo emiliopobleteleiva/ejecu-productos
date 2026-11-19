@@ -8,7 +8,7 @@ name: ejecu-productos
 
 services:
   postgres:
-    image: postgres:17.11-alpine@sha256:e5d2edd28b1f8d40a0a6c0c9cdc545b19b56a0d5d88f94bc11a97d970d4700d0
+    image: postgres:18.6-alpine@sha256:9ba53c7d41ea093baf5c1ba635ba5434c4f979880527d49bb7d9237d3193085b
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-productos}
       # Obligatoria, sin valor por defecto: una credencial por defecto en el repo
