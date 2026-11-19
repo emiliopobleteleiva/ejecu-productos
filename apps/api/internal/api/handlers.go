@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"sort"
 	"sync"
 	"time"
@@ -15,9 +16,9 @@ import (
 // memoria. Esta estructura y su almacenamiento se reemplazan por service y
 // store en el Hito 2.
 type ManejadoresProductos struct {
-	mu        sync.RWMutex
-	productos map[string]*Producto
-	skus      map[string]string
+	mu         sync.RWMutex
+	productos  map[string]*Producto
+	secuencias map[string]int
 }
 
 // NuevosManejadoresProductos crea el almacén simulado con datos de demo.
@@ -26,69 +27,78 @@ func NuevosManejadoresProductos() *ManejadoresProductos {
 
 	productos := []Producto{
 		{
-			ID:            "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-			SKU:           "PROD-001",
-			Nombre:        "Café molido 1 kg",
-			Descripcion:   "Café tostado de origen.",
-			CategoriaIDs:  []string{"7c9e6679-7425-40de-944b-e07fc1f90ae7"},
-			Costo:         12990,
-			PermiteVenta:  true,
-			Activo:        true,
-			CreadoEn:      ahora,
-			ActualizadoEn: ahora,
+			ID:             "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+			SKU:            "BEB-000001",
+			DepartamentoID: "1b4e28ba-2fa1-11d2-883f-0016d3cca427",
+			Nombre:         "Café molido 1 kg",
+			Descripcion:    "Café tostado de origen.",
+			CategoriaIDs:   []string{"7c9e6679-7425-40de-944b-e07fc1f90ae7"},
+			CostoUnitario:  12990,
+			TipoImpuesto:   "IVA",
+			PermiteVenta:   true,
+			Activo:         true,
+			CreadoEn:       ahora,
+			ActualizadoEn:  ahora,
 		},
 		{
-			ID:            "9b2b6c1e-4f3a-4c1d-9a7e-2f5b8c3d1e4f",
-			SKU:           "PROD-002",
-			Nombre:        "Taza cerámica",
-			Descripcion:   "Taza de 350 ml.",
-			CategoriaIDs:  []string{"16fd2706-8baf-433b-82eb-8c7fada847da"},
-			Costo:         4990,
-			PermiteVenta:  false,
-			Activo:        true,
-			CreadoEn:      ahora,
-			ActualizadoEn: ahora,
+			ID:             "9b2b6c1e-4f3a-4c1d-9a7e-2f5b8c3d1e4f",
+			SKU:            "HOG-000001",
+			DepartamentoID: "2c4e28ba-2fa1-11d2-883f-0016d3cca428",
+			Nombre:         "Taza cerámica",
+			Descripcion:    "Taza de 350 ml.",
+			CategoriaIDs:   []string{"16fd2706-8baf-433b-82eb-8c7fada847da"},
+			CostoUnitario:  4990,
+			TipoImpuesto:   "IVA",
+			PermiteVenta:   false,
+			Activo:         true,
+			CreadoEn:       ahora,
+			ActualizadoEn:  ahora,
 		},
 	}
 
 	m := &ManejadoresProductos{
-		productos: make(map[string]*Producto, len(productos)),
-		skus:      make(map[string]string, len(productos)),
+		productos:  make(map[string]*Producto, len(productos)),
+		secuencias: make(map[string]int, len(departamentosDemo)),
 	}
 	for i := range productos {
 		p := productos[i]
 		m.productos[p.ID] = &p
-		m.skus[p.SKU] = p.ID
+		m.secuencias[p.DepartamentoID]++
 	}
 	return m
 }
 
-// crear implementa POST /api/productos.
+// crear implementa POST /api/productos. El SKU lo genera el servicio a partir
+// del departamento; el cliente no lo envía.
 func (m *ManejadoresProductos) crear(_ context.Context, input *CrearProductoInput) (*CrearProductoOutput, error) {
 	// TODO: permiso productos:administrar
+	// TODO Hito 2: generar el SKU dentro de la misma transacción que inserta el
+	// producto. La existencia del departamento la garantiza la FK.
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	if _, existe := m.skus[input.Body.SKU]; existe {
-		return nil, huma.Error409Conflict("Ya existe un producto con el SKU indicado.")
+	departamento, existe := buscarDepartamento(input.Body.DepartamentoID)
+	if !existe {
+		return nil, huma.Error422UnprocessableEntity("El departamento indicado no existe.")
 	}
 
 	ahora := time.Now().UTC()
 	producto := &Producto{
-		ID:            nuevoUUID(),
-		SKU:           input.Body.SKU,
-		Nombre:        input.Body.Nombre,
-		Descripcion:   input.Body.Descripcion,
-		CategoriaIDs:  append([]string(nil), input.Body.CategoriaIDs...),
-		Costo:         input.Body.Costo,
-		PermiteVenta:  input.Body.PermiteVenta,
-		Activo:        true,
-		CreadoEn:      ahora,
-		ActualizadoEn: ahora,
+		ID:             nuevoUUID(),
+		SKU:            m.nuevoSKU(departamento.ID, departamento.Codigo),
+		DepartamentoID: input.Body.DepartamentoID,
+		Nombre:         input.Body.Nombre,
+		Descripcion:    input.Body.Descripcion,
+		CategoriaIDs:   append([]string(nil), input.Body.CategoriaIDs...),
+		CostoUnitario:  input.Body.CostoUnitario,
+		TipoImpuesto:   input.Body.TipoImpuesto,
+		PermiteVenta:   input.Body.PermiteVenta,
+		Activo:         true,
+		CreadoEn:       ahora,
+		ActualizadoEn:  ahora,
 	}
 
 	m.productos[producto.ID] = producto
-	m.skus[producto.SKU] = producto.ID
 
 	return &CrearProductoOutput{
 		Location: "/api/productos/" + producto.ID,
@@ -107,6 +117,9 @@ func (m *ManejadoresProductos) listar(_ context.Context, input *ListarProductosI
 			continue
 		}
 		if input.CategoriaID != "" && !contieneCategoria(p.CategoriaIDs, input.CategoriaID) {
+			continue
+		}
+		if input.DepartamentoID != "" && p.DepartamentoID != input.DepartamentoID {
 			continue
 		}
 		if input.PermiteVenta.Definido && p.PermiteVenta != input.PermiteVenta.Valor {
@@ -138,7 +151,8 @@ func (m *ManejadoresProductos) obtener(_ context.Context, input *ObtenerProducto
 	return &ObtenerProductoOutput{Body: clonarProducto(p)}, nil
 }
 
-// actualizar implementa PATCH /api/productos/{id}.
+// actualizar implementa PATCH /api/productos/{id}. El SKU y el departamento no
+// se modifican: cambiarlos alteraría el identificador de negocio del producto.
 func (m *ManejadoresProductos) actualizar(_ context.Context, input *ActualizarProductoInput) (*ActualizarProductoOutput, error) {
 	// TODO: permiso productos:administrar
 	m.mu.Lock()
@@ -149,14 +163,6 @@ func (m *ManejadoresProductos) actualizar(_ context.Context, input *ActualizarPr
 		return nil, huma.Error404NotFound("Producto no encontrado.")
 	}
 
-	if input.Body.SKU != nil && *input.Body.SKU != p.SKU {
-		if id, existe := m.skus[*input.Body.SKU]; existe && id != p.ID {
-			return nil, huma.Error409Conflict("Ya existe un producto con el SKU indicado.")
-		}
-		delete(m.skus, p.SKU)
-		p.SKU = *input.Body.SKU
-		m.skus[p.SKU] = p.ID
-	}
 	if input.Body.Nombre != nil {
 		p.Nombre = *input.Body.Nombre
 	}
@@ -166,8 +172,11 @@ func (m *ManejadoresProductos) actualizar(_ context.Context, input *ActualizarPr
 	if input.Body.CategoriaIDs != nil {
 		p.CategoriaIDs = append([]string(nil), (*input.Body.CategoriaIDs)...)
 	}
-	if input.Body.Costo != nil {
-		p.Costo = *input.Body.Costo
+	if input.Body.CostoUnitario != nil {
+		p.CostoUnitario = *input.Body.CostoUnitario
+	}
+	if input.Body.TipoImpuesto != nil {
+		p.TipoImpuesto = *input.Body.TipoImpuesto
 	}
 	if input.Body.PermiteVenta != nil {
 		p.PermiteVenta = *input.Body.PermiteVenta
@@ -192,6 +201,17 @@ func (m *ManejadoresProductos) eliminar(_ context.Context, input *EliminarProduc
 		p.ActualizadoEn = time.Now().UTC()
 	}
 	return nil, nil
+}
+
+// nuevoSKU arma el SKU del producto y avanza el secuencial del departamento.
+// Debe llamarse con el mutex tomado. En el Hito 2 el secuencial sale de una
+// secuencia por departamento dentro de la misma transacción del insert.
+//
+// TODO Hito 2: el formato (separador y cantidad de dígitos) es un parámetro
+// por instancia, según la Base técnica.
+func (m *ManejadoresProductos) nuevoSKU(departamentoID, codigo string) string {
+	m.secuencias[departamentoID]++
+	return fmt.Sprintf("%s-%06d", codigo, m.secuencias[departamentoID])
 }
 
 // clonarProducto devuelve una copia segura para no exponer los slices

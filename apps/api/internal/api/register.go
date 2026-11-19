@@ -13,7 +13,7 @@ func Registrar(api huma.API, manejadores *ManejadoresProductos) {
 		Method:        http.MethodPost,
 		Path:          "/api/productos",
 		Summary:       "Crea un producto",
-		Description:   "Crea un producto con SKU único y al menos una categoría.",
+		Description:   "Crea un producto con SKU autogenerado a partir del departamento y al menos una categoría. El SKU es inmutable.",
 		Tags:          []string{"productos"},
 		DefaultStatus: http.StatusCreated,
 	}, manejadores.crear)
@@ -23,9 +23,18 @@ func Registrar(api huma.API, manejadores *ManejadoresProductos) {
 		Method:      http.MethodGet,
 		Path:        "/api/productos",
 		Summary:     "Lista productos",
-		Description: "Lista los productos activos y permite filtrar por categoría y por disponibilidad de venta.",
+		Description: "Lista los productos activos y permite filtrar por categoría, por departamento y por disponibilidad de venta.",
 		Tags:        []string{"productos"},
 	}, manejadores.listar)
+
+	huma.Register(api, huma.Operation{
+		OperationID: "listar-departamentos",
+		Method:      http.MethodGet,
+		Path:        "/api/departamentos",
+		Summary:     "Lista los departamentos disponibles",
+		Description: "Devuelve el catálogo de departamentos con el id que se envía al crear un producto y el código que forma su SKU.",
+		Tags:        []string{"departamentos"},
+	}, manejadores.listarDepartamentos)
 
 	huma.Register(api, huma.Operation{
 		OperationID: "obtener-producto",
@@ -41,7 +50,7 @@ func Registrar(api huma.API, manejadores *ManejadoresProductos) {
 		Method:      http.MethodPatch,
 		Path:        "/api/productos/{id}",
 		Summary:     "Actualiza parcialmente un producto",
-		Description: "Actualiza solo los campos enviados del producto.",
+		Description: "Actualiza solo los campos enviados. El SKU y el departamento son inmutables.",
 		Tags:        []string{"productos"},
 	}, manejadores.actualizar)
 
