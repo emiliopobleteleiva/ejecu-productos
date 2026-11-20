@@ -1,4 +1,4 @@
-import { defineConfig } from "vite"
+import { defineConfig } from "vitest/config"
 import react from "@vitejs/plugin-react"
 import tailwindcss from "@tailwindcss/vite"
 
@@ -10,5 +10,23 @@ export default defineConfig({
     // TODO: usar 51N0 cuando el documento de componentes nos asigne el número N.
     port: 5173,
     strictPort: true,
+  },
+  test: {
+    environment: "jsdom",
+    include: ["src/**/*.test.{ts,tsx}"],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "lcov"],
+      reportsDirectory: "coverage",
+      include: ["src/**/*.{ts,tsx}"],
+      // Lo generado, el entrypoint y el arranque del worker de MSW no son código
+      // propio que tenga sentido medir.
+      exclude: [
+        "src/api/**",
+        "src/main.tsx",
+        "src/mocks/navegador.ts",
+        "src/**/*.test.{ts,tsx}",
+      ],
+    },
   },
 })
