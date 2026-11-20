@@ -8,9 +8,26 @@
   "scripts": {
     "codegen": "cd apps/api && go run ./cmd/codegen",
     "verify": "cd apps/api && go vet ./... && go build ./...",
-    "test:api": "cd apps/api && go test -coverpkg=./internal/... -coverprofile=../../coverage.out ./internal/..."
+    "test:api": "cd apps/api && go test -coverpkg=./internal/... -coverprofile=../../coverage.out ./internal/...",
+    "test:web": "pnpm --filter web test",
+    "web:dev": "pnpm --filter web dev",
+    "web:build": "pnpm --filter web build",
+    "web:tipos": "pnpm --filter web tipos",
+    "typecheck": "pnpm --filter web typecheck",
+    "lint": "oxlint --deny-warnings apps/web/src",
+    "format": "prettier --check apps/web"
   },
   "devDependencies": {
-    "lefthook": "2.1.10"
+    "lefthook": "catalog:",
+    "oxlint": "catalog:",
+    "prettier": "catalog:",
+    "prettier-plugin-tailwindcss": "catalog:"
+  },
+  "pnpm": {
+    "auditConfig": {
+      "ignoreGhsas": [
+        "GHSA-587h-7wmj-h5pm"
+      ]
+    }
   }
 }

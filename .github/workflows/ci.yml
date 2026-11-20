@@ -56,6 +56,12 @@ jobs:
       - name: cobertura
         run: pnpm test:api
 
+      - name: cobertura del front
+        run: pnpm test:web
+
+      - name: tipos y build del front
+        run: pnpm typecheck && pnpm web:build
+
       - name: validar configuracion de sonar
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
