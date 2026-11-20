@@ -1,0 +1,28 @@
+# Workspace de pnpm. Por ahora solo el front; la API es Go y no entra aquí.
+packages:
+  - apps/web
+
+# Versiones exactas del DAS (sección 3, Frontend). Ningún package.json lleva
+# versiones sueltas: todos apuntan aquí con "catalog:". Sin ^ ni ~.
+catalog:
+  # Base del front
+  react: 19.2.8
+  react-dom: 19.2.8
+  typescript: 6.0.3
+  vite: 8.1.5
+  "@vitejs/plugin-react": 6.0.4
+  tailwindcss: 4.3.3
+  "@tailwindcss/vite": 4.3.3
+  # Contrato: tipos generados y cliente tipado
+  openapi-typescript: 7.13.0
+  openapi-fetch: 0.15.2
+  # Mocks de la app de desarrollo
+  msw: 2.15.0
+  # Tipos de React (no están en el DAS: última 19.2.x, a confirmar con el ayudante)
+  "@types/react": 19.2.18
+  "@types/react-dom": 19.2.7
+  # Herramientas de la raíz
+  lefthook: 2.1.10
+  oxlint: 1.75.0
+  prettier: 3.9.6
+  prettier-plugin-tailwindcss: 0.8.1

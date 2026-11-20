@@ -1,0 +1,8 @@
+# Generados: no se formatean a mano.
+contracts/
+apps/web/src/api/contrato.d.ts
+apps/web/public/mockServiceWorker.js
+pnpm-lock.yaml
+# El DAS y los golden conservan su formato original.
+docs/
+**/*.golden.md
