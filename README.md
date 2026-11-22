@@ -68,6 +68,7 @@ lefthook.yml                  # hooks de pre-commit y pre-push
 docs/modos-de-falla.md
 docs/decisiones.md
 docs/arquitectura.md
+docs/como-consumir-el-contrato.md
 docs/entorno.md
 ```
 
@@ -105,6 +106,14 @@ Resumen:
 
 En `API_ENV=dev` la documentación interactiva está en `/api/docs` y el
 contrato en `/api/openapi.json`.
+
+## Para otros grupos
+
+Si dependes de este servicio no necesitas leer el código: copia
+`contracts/openapi.yaml` a `contracts/externos/productos.yaml` y genera tu
+cliente desde ahí (Go con `oapi-codegen`, front con `openapi-typescript`). La
+guía completa —comandos, mocks con Prism, errores y política de versionado— está
+en [`docs/como-consumir-el-contrato.md`](docs/como-consumir-el-contrato.md).
 
 ## Cómo levantar la API
 
